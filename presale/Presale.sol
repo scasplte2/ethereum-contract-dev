@@ -78,8 +78,20 @@ contract Presale is owned {
         // tx being broadcast first.                                   //
         /////                                                       /////
 
-        participant cur_participant = participants[msg.sender]; // get participant struct mapped to the given payout_address
+        participant cur_participant = participants[msg.sender]; // get participant struct mapped to the sender
         cur_participant.payout_address = _payout_address; // change payout address
+    }
+
+    function GetInfo() public view Whitelisted PresaleOpen returns(uint256 eth, uint256 tokens, address payout_address) {
+
+        /////                                                       /////
+        // Let's users check that their info is correct. Also, allows  //
+        // fiat participants to check that we, Topl, input their       //
+        // purchase correctly.                                         //
+        /////                                                       /////
+
+        participant cur_participant = participants[msg.sender]; // get participant struct mapped to the sender
+        return (cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address); // return all participant data-points
     }
 
     // tick function
@@ -94,7 +106,20 @@ contract Presale is owned {
     }
 
     // owner functions
-    function AddParticipant(uint256 _eth_contributed, uint256 _token_amount, address _payout_address) public Whitelisted ValidPurchase(_token_amount) {
+    function GetParticipant(address subject) public view OnlyOwner returns(uint256 eth, uint256 tokens, address payout_address) {
+
+        /////                                                       /////
+        // Let's the owner get info on a participant. NOTE: This info  //
+        // is technically publicly available, but requires a decent    //
+        // amount of technical skill to access. This gives the owner   //
+        // an easy way to look around the database.                    //
+        /////                                                       /////
+
+        participant cur_participant = participants[subject]; // get participant struct mapped to the sender
+        return (cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address); // return all participant data-points
+    }
+
+    function AddParticipant(uint256 _eth_contributed, uint256 _token_amount, address _payout_address) public OnlyOwner Whitelisted ValidPurchase(_token_amount) {
 
         /////                                                       /////
         // Used by an owner to manually add a participant to the       //
@@ -108,6 +133,31 @@ contract Presale is owned {
         cur_participant.payout_address = _payout_address; // set payout address
         sold_presale_tokens = sold_presale_tokens.add(_token_amount); // update sold amount counter
     }
+
+    function RemoveParticipant() public OnlyOwner {
+
+    }
+
+    function EditParticipant() public OnlyOwner {
+
+    }
+
+    function ToggleDutchAuction() public OnlyOwner {
+
+        /////                                                       /////
+        // turn the dutch auction on and off if you're an owner        //
+        /////                                                       /////
+
+        if (dutch_auction_on) { // if on turn off
+            dutch_auction_on = false;
+        } else { // if off turn on
+            dutch_auction_on = true;
+        }
+    }
+
+    // helper functions
+
+
 
     // modifiers
     modifier Whitelisted(address check) {
