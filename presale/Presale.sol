@@ -10,7 +10,7 @@ pragma solidity ^0.4.23;
 import "./Owned.sol";
 import "./SafeMath.sol";
 
-contract Presale is owned {
+contract Presale is Owned {
 
     // no overflows
     using SafeMath for uint256;
@@ -134,12 +134,35 @@ contract Presale is owned {
         sold_presale_tokens = sold_presale_tokens.add(_token_amount); // update sold amount counter
     }
 
-    function RemoveParticipant() public OnlyOwner {
+    function RemoveParticipant(address subject) public OnlyOwner {
 
+        /////                                                       /////
+        // Used by an owner to erase a participant's existence. It     //
+        // resets their struct and undoes their tokens from the sold   //
+        // tokens counter.                                             //
+        /////                                                       /////
+
+        participant cur_participant = participants[subject]; // get participant struct mapped to the given subject
+        sold_presale_tokens = sold_presale_tokens.sub(cur_participant.token_amount); // undo his tokens from the sold count
+        cur_participant.eth_contributed = 0; // 0
+        cur_participant.token_amount = 0; // 0
+        cur_participant.payout_address = 0x0; // 0
     }
 
-    function EditParticipant() public OnlyOwner {
+    function EditParticipant(address subject, uint256 _new_eth, uint256 _new_tokens, address _new_payout_address) public OnlyOwner {
 
+        /////                                                       /////
+        // Used by an owner to adjust a participant's account. Can be  //
+        // used to remove a participant completely though              //
+        // RemoveParticipant if more efficient. Edits token count.     //
+        /////                                                       /////
+
+        participant cur_participant = participants[subject]; // get participant struct mapped to the given subject
+        sold_presale_tokens = sold_presale_tokens.sub(cur_participant.token_amount); // undo his tokens from the sold count
+        cur_participant.eth_contributed = _new_eth; // set to arg
+        cur_participant.token_amount = _new_tokens; // set to arg
+        cur_participant.payout_address = _new_payout_address; // set to arg
+        sold_presale_tokens = sold_presale_tokens.add(cur_participant.token_amount); // add his tokens to the sold count
     }
 
     function ToggleDutchAuction() public OnlyOwner {
