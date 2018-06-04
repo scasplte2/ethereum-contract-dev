@@ -276,6 +276,18 @@ contract Presale is Owned {
     }
 
     // events
-
-
+    event e_Participate(address, uint256, uint256, address);
+    event e_ChangePayoutAddress(address, uint256, uint256, address, address);
+    event e_GetInfo(address, uint256, uint256, address);
+    event e_Tick(uint256);
+    event e_GetParticipant(address, uint256, uint256, address);
+    event e_AddParticipant(address, uint256, uint256, address, uint256);
+    event e_RemoveParticipant(address, uint256, uint256, address, uint256);
+    event e_EditParticipant(address, uint256, uint256, address, uint256, uint256, address, uint256);
+    event e_ToggleDutchAuction(bool);
+    event e_AddWhitelister(address, bool);
+    event e_RemoveWhitelister(address, bool);
+    event e_IsWhiteListed(address, address, bool);
+    event e_IsDutchAuction(address, address, bool);
+    event e_IsPresaleOpen(address, bool);
 }
