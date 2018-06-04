@@ -1,5 +1,4 @@
 // TO DO
-// - Safe Math
 // - Dutch Auction
 // - whitelist functionality
 // - helpers
@@ -103,6 +102,9 @@ contract Presale is Owned {
         // price pressure. Additionally, the owner can adjust the tick //
         // amount to tune granularity.                                 //
         /////                                                       /////
+
+        ///////// NOT DONE
+
     }
 
     // owner functions
@@ -178,8 +180,51 @@ contract Presale is Owned {
         }
     }
 
-    // helper functions
+    function AddWhitelister(address _new_whitelister) public OnlyOwner {
 
+        /////                                                       /////
+        // adds an address to the whitelist                            //
+        /////                                                       /////
+
+        whitelist[_new_whitelister] = true; // welcome
+    }
+
+    function RemoveWhitelister(address _whitelister) public OnlyOwner {
+
+        /////                                                       /////
+        // removes an address to the whitelist                         //
+        /////                                                       /////
+
+        whitelist[_whitelister] = false; //  get out
+    }
+
+    // helper functions
+    function IsWhitelisted(address subject) public PresaleOpen returns(bool) {
+
+        /////                                                       /////
+        // checks an address's status                                  //
+        /////                                                       /////
+
+        return whitelist[subject]; // returns bool
+    }
+
+    function IsDutchAuction() public PresaleOpen returns(bool) {
+
+        /////                                                       /////
+        // checks if dutch auction logic is active                     //
+        /////                                                       /////
+
+        return dutch_auction_on; // returns bool
+    }
+
+    function IsPresaleOpen() public returns(bool) {
+
+        /////                                                       /////
+        // checks if presale is open                                   //
+        /////                                                       /////
+
+        return presale_open; // returns bool
+    }
 
 
     // modifiers
@@ -229,5 +274,8 @@ contract Presale is Owned {
             throw;
         }
     }
+
+    // events
+
 
 }
