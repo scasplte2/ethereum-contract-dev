@@ -65,6 +65,8 @@ contract Presale is Owned {
         cur_participant.payout_address = _payout_address; // set payout address
         sold_presale_tokens = sold_presale_tokens.add(cur_participant.token_amount);
 
+        // event
+        emit e_Participate(msg.sender, msg.value, CalcTokenAmount(msg.value), _payout_address, cur_participant.eth_contributed, cur_participant.token_amount);
     }
 
     function ChangePayoutAddress(address _payout_address) public Whitelisted PresaleOpen {
@@ -78,7 +80,11 @@ contract Presale is Owned {
         /////                                                       /////
 
         participant cur_participant = participants[msg.sender]; // get participant struct mapped to the sender
+        address old_payout_address = cur_participant.payout_address;
         cur_participant.payout_address = _payout_address; // change payout address
+
+        // event
+        emit e_ChangePayoutAddress(msg.sender, cur_participant.eth_contributed, cur_participant.token_amount, old_payout_address, _payout_address);
     }
 
     function GetInfo() public view Whitelisted PresaleOpen returns(uint256 eth, uint256 tokens, address payout_address) {
@@ -90,6 +96,10 @@ contract Presale is Owned {
         /////                                                       /////
 
         participant cur_participant = participants[msg.sender]; // get participant struct mapped to the sender
+
+        //event
+        emit e_GetInfo(msg.sender, cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address);
+
         return (cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address); // return all participant data-points
     }
 
@@ -119,6 +129,9 @@ contract Presale is Owned {
 
         participant cur_participant = participants[subject]; // get participant struct mapped to the sender
         return (cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address); // return all participant data-points
+
+        // event
+        emit e_GetParticipant(subject, cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address);
     }
 
     function AddParticipant(uint256 _eth_contributed, uint256 _token_amount, address _payout_address) public OnlyOwner Whitelisted ValidPurchase(_token_amount) {
@@ -134,6 +147,9 @@ contract Presale is Owned {
         cur_participant.token_amount = cur_participant.token_amount.add(_token_amount); // add tokens to the current tokens amount (this is an arg rather calculated value allowing for custom prices)
         cur_participant.payout_address = _payout_address; // set payout address
         sold_presale_tokens = sold_presale_tokens.add(_token_amount); // update sold amount counter
+
+        // event
+        emit e_AddParticipant(cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address, sold_presale_tokens);
     }
 
     function RemoveParticipant(address subject) public OnlyOwner {
@@ -146,9 +162,15 @@ contract Presale is Owned {
 
         participant cur_participant = participants[subject]; // get participant struct mapped to the given subject
         sold_presale_tokens = sold_presale_tokens.sub(cur_participant.token_amount); // undo his tokens from the sold count
+        uint256 old_eth = cur_participant.eth_contributed; // for later event
+        uint256 old_tokens = cur_participant.token_amount; // for later event
+        address old_payout_address = cur_participant.payout_address; // for later event
         cur_participant.eth_contributed = 0; // 0
         cur_participant.token_amount = 0; // 0
         cur_participant.payout_address = 0x0; // 0
+
+        // event
+        emit e_RemoveParticipant(subject, old_eth, old_tokens, old_payout_address, sold_presale_tokens);
     }
 
     function EditParticipant(address subject, uint256 _new_eth, uint256 _new_tokens, address _new_payout_address) public OnlyOwner {
@@ -161,10 +183,16 @@ contract Presale is Owned {
 
         participant cur_participant = participants[subject]; // get participant struct mapped to the given subject
         sold_presale_tokens = sold_presale_tokens.sub(cur_participant.token_amount); // undo his tokens from the sold count
+        uint256 old_eth = cur_participant.eth_contributed; // for later event
+        uint256 old_tokens = cur_participant.token_amount; // for later event
+        address old_payout_address = cur_participant.payout_address; // for later event
         cur_participant.eth_contributed = _new_eth; // set to arg
         cur_participant.token_amount = _new_tokens; // set to arg
         cur_participant.payout_address = _new_payout_address; // set to arg
         sold_presale_tokens = sold_presale_tokens.add(cur_participant.token_amount); // add his tokens to the sold count
+
+        // event
+        emit e_EditParticipant(subject, old_eth, old_tokens, old_payout_address, _new_eth, _new_tokens, _new_payout_address, sold_presale_tokens);
     }
 
     function ToggleDutchAuction() public OnlyOwner {
@@ -178,6 +206,9 @@ contract Presale is Owned {
         } else { // if off turn on
             dutch_auction_on = true;
         }
+
+        // event
+        emit e_ToggleDutchAuction(dutch_auction_on);
     }
 
     function AddWhitelister(address _new_whitelister) public OnlyOwner {
@@ -187,6 +218,9 @@ contract Presale is Owned {
         /////                                                       /////
 
         whitelist[_new_whitelister] = true; // welcome
+
+        //event
+        emit e_AddWhitelister(_new_whitelister, whitelist[_new_whitelister]);
     }
 
     function RemoveWhitelister(address _whitelister) public OnlyOwner {
@@ -196,6 +230,9 @@ contract Presale is Owned {
         /////                                                       /////
 
         whitelist[_whitelister] = false; //  get out
+
+        // event
+        emit e_RemoveWhitelister(_whitelister, whitelist[_whitelister]);
     }
 
     // helper functions
@@ -206,6 +243,9 @@ contract Presale is Owned {
         /////                                                       /////
 
         return whitelist[subject]; // returns bool
+
+        // event
+        emit e_IsWhiteListed(msg.sender, subject, whitelist[subject]);
     }
 
     function IsDutchAuction() public PresaleOpen returns(bool) {
@@ -215,6 +255,9 @@ contract Presale is Owned {
         /////                                                       /////
 
         return dutch_auction_on; // returns bool
+
+        // event
+        emit e_IsDutchAuction(msg.sender, dutch_auction_on);
     }
 
     function IsPresaleOpen() public returns(bool) {
@@ -224,6 +267,9 @@ contract Presale is Owned {
         /////                                                       /////
 
         return presale_open; // returns bool
+
+        // event
+        emit e_IsPresaleOpen(msg.sender, presale_open);
     }
 
 
@@ -276,18 +322,18 @@ contract Presale is Owned {
     }
 
     // events
-    event e_Participate(address, uint256, uint256, address);
+    event e_Participate(address, uint256, uint256, address, uint256, uint256);
     event e_ChangePayoutAddress(address, uint256, uint256, address, address);
     event e_GetInfo(address, uint256, uint256, address);
     event e_Tick(uint256);
     event e_GetParticipant(address, uint256, uint256, address);
-    event e_AddParticipant(address, uint256, uint256, address, uint256);
+    event e_AddParticipant(uint256, uint256, address, uint256);
     event e_RemoveParticipant(address, uint256, uint256, address, uint256);
     event e_EditParticipant(address, uint256, uint256, address, uint256, uint256, address, uint256);
     event e_ToggleDutchAuction(bool);
     event e_AddWhitelister(address, bool);
     event e_RemoveWhitelister(address, bool);
     event e_IsWhiteListed(address, address, bool);
-    event e_IsDutchAuction(address, address, bool);
+    event e_IsDutchAuction(address, bool);
     event e_IsPresaleOpen(address, bool);
 }
