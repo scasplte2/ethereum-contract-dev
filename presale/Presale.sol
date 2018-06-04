@@ -1,3 +1,9 @@
+// TO DO
+// - Safe Math
+// - Dutch Auction
+// - whitelist functionality
+// - helpers
+
 pragma solidity ^0.4.23;
 
 import "./Owned.sol";
@@ -22,20 +28,33 @@ contract Presale is owned{
         /////                                                       /////
         // Adds owner to the whitelist, sets initial values, and       //
         // toggles if the dutch auction is on. Also, sets owner via    //
-        // Owned contract.                                             //
+        // Owned contract inheritance.                                 //
         /////                                                       /////
         whitelist[msg.sender] =  true; // whitelist owner
     }
 
     // participant functions
     function Participate(address _payout_address) public payable Whitelisted {
+        /////                                                       /////
+        // Used to participate in the pre-sale with Ether.             //
+        // Participants must be added to the pre-sale whitelist prior  //
+        // to using this method or they will be denied. Participants   //
+        // paying via a fiat currency or other medium must be added via
+        /////                                                       /////
         participant cur_participant = participants[msg.sender];
-        cur_participant.eth_contribution = msg.value;
-        cur_participant.token_amount = CalcTokenAmount(msg.value);
+        cur_participant.eth_contribution = cur_participant.eth_contributed + msg.value;
+        cur_participant.token_amount =  cur_participant.token_amount + CalcTokenAmount(msg.value);
         cur_participant.payout_address = _payout_address;
     }
 
     function ChangePayoutAddress(address _payout_address) public Whitelisted {
+        /////                                                       /////
+        // Used to change a participant's payout address.              //
+        // NOTE: This may not always work. If you try to changes your  //
+        // payout address, but a tx asking for your payout address is  //
+        // first it will return your 'old' payout address despite your //
+        // tx being broadcast first.                                   //
+        /////                                                       /////
         participant cur_participant = participants[msg.sender];
         cur_participant.payou_address = _payout_address;
     }
