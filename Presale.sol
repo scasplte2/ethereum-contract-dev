@@ -22,6 +22,8 @@ contract Presale is Owned {
     }
     mapping(address => participant) public participants;
     mapping(address => bool) public whitelist;
+    address[] whitelist_edits;
+    address[] participant_edits;
     bool presale_open = false;
     uint256 initial_tokens_per_ether = 2;
     uint256 initial_price_tick = 1;
@@ -38,6 +40,7 @@ contract Presale is Owned {
         /////                                                       /////
 
         whitelist[msg.sender] = true; // whitelist owner
+        whitelist_edits.push(msg.sender); // add to edits list
         initial_tokens_per_ether = _initial_tokens_per_ether;
         initial_price_tick = _initial_price_tick;
         total_presale_tokens = _total_presale_tokens;
@@ -57,10 +60,14 @@ contract Presale is Owned {
         /////                                                       /////
 
         participant cur_participant = participants[msg.sender]; // get participant struct mapped to the given payout_address
+        if (cur_participant.token_amount == 0) {
+            participant_edits.push(msg.sender); // add to edits list
+        }
         cur_participant.eth_contribution = cur_participant.eth_contributed.add(msg.value); // add eth contributed to current amount
         cur_participant.token_amount =  cur_participant.token_amount.add(CalcTokenAmount(msg.value)); // add tokens to the current tokens amount
         cur_participant.payout_address = _payout_address; // set payout address
         sold_presale_tokens = sold_presale_tokens.add(cur_participant.token_amount);
+
 
         // event
         emit e_Participate(msg.sender, msg.value, CalcTokenAmount(msg.value), _payout_address, cur_participant.eth_contributed, cur_participant.token_amount);
@@ -117,7 +124,7 @@ contract Presale is Owned {
         emit e_GetParticipant(subject, cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address);
     }
 
-    function AddParticipant(uint256 _eth_contributed, uint256 _token_amount, address _payout_address) public OnlyOwner Whitelisted ValidPurchase(_token_amount) {
+    function AddParticipant(uint256 _eth_contributed, uint256 _token_amount, address _payout_address) public OnlyOwner ValidPurchase(_token_amount) {
 
         /////                                                       /////
         // Used by an owner to manually add a participant to the       //
@@ -126,6 +133,9 @@ contract Presale is Owned {
         /////                                                       /////
 
         participant cur_participant = participants[_payout_address]; // get participant struct mapped to the given payout_address
+        if (cur_participant.token_amount == 0) {
+            participant_edits.push(msg.sender); // add to edits list
+        }
         cur_participant.eth_contributed =cur_participant.eth_contributed.add(_eth_contributed); // add eth contributed to current amount (for fiat a conversion is done off-chain)
         cur_participant.token_amount = cur_participant.token_amount.add(_token_amount); // add tokens to the current tokens amount (this is an arg rather calculated value allowing for custom prices)
         cur_participant.payout_address = _payout_address; // set payout address
@@ -185,6 +195,7 @@ contract Presale is Owned {
         /////                                                       /////
 
         whitelist[_new_whitelister] = true; // welcome
+        whitelist_edits.push(msg.sender); // add to edits list
 
         //event
         emit e_AddWhitelister(_new_whitelister, whitelist[_new_whitelister]);
@@ -225,6 +236,11 @@ contract Presale is Owned {
 
         // event
         emit e_IsPresaleOpen(msg.sender, presale_open);
+    }
+
+    // exporter
+    function export() public PresaleOpen {
+
     }
 
 
