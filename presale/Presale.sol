@@ -22,7 +22,6 @@ contract Presale is Owned {
     }
     mapping(address => participant) public participants;
     mapping(address => bool) public whitelist;
-    bool dutch_auction_on = false;
     bool presale_open = false;
     uint256 initial_tokens_per_ether = 2;
     uint256 initial_price_tick = 1;
@@ -31,12 +30,11 @@ contract Presale is Owned {
 
     // constructor
     constructor(uint256 _initial_tokens_per_ether, uint256 _initial_price_tick, uint256 _total_presale_tokens,
-                uint256 _sold_presale_tokens, bool _dutch_auction_on, bool _presale_open) public {
+                uint256 _sold_presale_tokens, bool _presale_open) public {
 
         /////                                                       /////
-        // Adds owner to the whitelist, sets initial values, and       //
-        // toggles if the dutch auction is on. Also, sets owner via    //
-        // Owned contract inheritance.                                 //
+        // Adds owner to the whitelist, sets initial values Also, sets //
+        //  owner via Owned contract inheritance.                      //
         /////                                                       /////
 
         whitelist[msg.sender] = true; // whitelist owner
@@ -44,7 +42,6 @@ contract Presale is Owned {
         initial_price_tick = _initial_price_tick;
         total_presale_tokens = _total_presale_tokens;
         sold_presale_tokens = _sold_presale_tokens;
-        dutch_auction_on = _dutch_auction_on;
         presale_open = _presale_open;
     }
 
@@ -101,20 +98,6 @@ contract Presale is Owned {
         emit e_GetInfo(msg.sender, cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address);
 
         return (cur_participant.eth_contributed, cur_participant.token_amount, cur_participant.payout_address); // return all participant data-points
-    }
-
-    // tick function
-    function Tick() public OnlyOwner DutchAuctionOn PresaleOpen {
-        /////                                                       /////
-        // Used for dutch auction as the downward price pressure.      //
-        // Meant to be triggered by an owner's web3 script a constant  //
-        // rate. The rate determines the strength of the downward      //
-        // price pressure. Additionally, the owner can adjust the tick //
-        // amount to tune granularity.                                 //
-        /////                                                       /////
-
-        ///////// NOT DONE
-
     }
 
     // owner functions
@@ -195,22 +178,6 @@ contract Presale is Owned {
         emit e_EditParticipant(subject, old_eth, old_tokens, old_payout_address, _new_eth, _new_tokens, _new_payout_address, sold_presale_tokens);
     }
 
-    function ToggleDutchAuction() public OnlyOwner {
-
-        /////                                                       /////
-        // turn the dutch auction on and off if you're an owner        //
-        /////                                                       /////
-
-        if (dutch_auction_on) { // if on turn off
-            dutch_auction_on = false;
-        } else { // if off turn on
-            dutch_auction_on = true;
-        }
-
-        // event
-        emit e_ToggleDutchAuction(dutch_auction_on);
-    }
-
     function AddWhitelister(address _new_whitelister) public OnlyOwner {
 
         /////                                                       /////
@@ -246,18 +213,6 @@ contract Presale is Owned {
 
         // event
         emit e_IsWhiteListed(msg.sender, subject, whitelist[subject]);
-    }
-
-    function IsDutchAuction() public PresaleOpen returns(bool) {
-
-        /////                                                       /////
-        // checks if dutch auction logic is active                     //
-        /////                                                       /////
-
-        return dutch_auction_on; // returns bool
-
-        // event
-        emit e_IsDutchAuction(msg.sender, dutch_auction_on);
     }
 
     function IsPresaleOpen() public returns(bool) {
@@ -297,19 +252,6 @@ contract Presale is Owned {
             throw;
         } else {
             _;
-        }
-    }
-
-    modifier DutchAuctionOn() {
-
-        /////                                                       /////
-        // checks if thw dutch auction logic is active                 //
-        /////                                                       /////
-
-        if (dutch_auction_on) {
-            _;
-        } else {
-            throw;
         }
     }
 
